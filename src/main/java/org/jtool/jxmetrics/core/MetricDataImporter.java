@@ -5,11 +5,9 @@
 
 package org.jtool.jxmetrics.core;
 
-import org.jtool.jxplatform.builder.TimeInfo;
 import org.xml.sax.helpers.DefaultHandler;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
-import java.time.ZonedDateTime;
 
 /**
  * Imports the metric values related to element within a project from an XML file.
@@ -18,18 +16,19 @@ import java.time.ZonedDateTime;
  */
 public class MetricDataImporter extends DefaultHandler {
     
-    private ProjectMetrics projectMetrics;
-    private PackageMetrics packageMetrics;
-    private ClassMetrics classMetrics;
-    private MethodMetrics methodMetrics;
-    private FieldMetrics fieldMetrics;
+    private MetricsStore mstore;
+    private ProjectMetrics mproject;
+    private PackageMetrics mpackage;
+    private ClassMetrics mclass;
+    private MethodMetrics mmethod;
+    private FieldMetrics mfield;
     private Metrics parent;
     
     public MetricDataImporter() {
     }
     
-    public ProjectMetrics getProjectMetrics() {
-        return projectMetrics;
+    public MetricsStore getJxmProjects() {
+        return mstore;
     }
     
     @Override
@@ -38,80 +37,85 @@ public class MetricDataImporter extends DefaultHandler {
     
     @Override
     public void endDocument() throws SAXException {
-        projectMetrics.collectMetricsAfterXMLImport();
+        mstore.getProjectMetrics().forEach(p -> p.collectMetricsAfterXMLImport());
     }
     
     @Override
     public void startElement(String uri, String name, String qname, Attributes attrs) {
+        if (qname.equals(MetricsManager.ProjectsElem)) {
+            setJxmProjectAttributes(attrs);
+            return;
+        }
+        
         if (qname.equals(MetricsManager.ProjectElem)) {
             setProjectAttributes(attrs);
-            parent = projectMetrics;
+            parent = mproject;
             return;
         }
         
         if (qname.equals(MetricsManager.PackageElem)) {
             setPackageAttributes(attrs);
-            parent = packageMetrics;
+            parent = mpackage;
             return;
         }
         
         if (qname.equals(MetricsManager.ClassElem)) {
             setClassAttributes(attrs);
-            parent = classMetrics;
+            parent = mclass;
             return;
         }
         
         if (qname.equals(MetricsManager.MethodElem)) {
             setMethodAttributes(attrs);
-            parent = methodMetrics;
+            parent = mmethod;
             return;
         }
         
         if (qname.equals(MetricsManager.FieldElem)) {
             setFieldAttributes(attrs);
-            parent = fieldMetrics;
+            parent = mfield;
             return;
         }
         
         if (qname.equals(MetricsManager.SuperClassElem)) {
-            if (parent == classMetrics) {
+            if (parent == mclass) {
                 if (attrs.getQName(0).equals(MetricsManager.FqnAttr)) {
-                    classMetrics.setSuperClass(attrs.getValue(0));
+                    mclass.setSuperClass(attrs.getValue(0));
                 }
             }
             return;
         }
         
         if (qname.equals(MetricsManager.SuperInterfaceElem)) {
-            if (parent == classMetrics) {
+            if (parent == mclass) {
                 if (attrs.getQName(0).equals(MetricsManager.FqnAttr)) {
-                    classMetrics.addSuperInterface(attrs.getValue(0));
+                    mclass.addSuperInterface(attrs.getValue(0));
                 }
             }
             return;
         }
         
         if (qname.equals(MetricsManager.AfferentElem)) {
-            if (parent == packageMetrics) {
+            if (parent == mpackage) {
                 if (attrs.getQName(0).equals(MetricsManager.FqnAttr)) {
-                    packageMetrics.addAfferentPackage(attrs.getValue(0));
+                    mpackage.addAfferentPackage(attrs.getValue(0));
                 }
-            } else if (parent == classMetrics) {
+            } else if (parent == mclass) {
                 if (attrs.getQName(0).equals(MetricsManager.FqnAttr)) {
-                    classMetrics.addAfferentClass(attrs.getValue(0));
+                    mclass.addAfferentClass(attrs.getValue(0));
                 }
             }
             return;
         }
         
         if (qname.equals(MetricsManager.EfferentElem)) {
-            if (parent == packageMetrics) {
+            if (parent == mpackage) {
                 if (attrs.getQName(0).equals(MetricsManager.FqnAttr)) {
-                    packageMetrics.addEfferentPackage(attrs.getValue(0));
+                    mpackage.addEfferentPackage(attrs.getValue(0));
                 }
-            } else if (parent == classMetrics) {
+            } else if (parent == mclass) {
                 if (attrs.getQName(0).equals(MetricsManager.FqnAttr)) {
-                    classMetrics.addEfferentClass(attrs.getValue(0));
+                    mclass.addEfferentClass(attrs.getValue(0));
                 }
             }
             return;
@@ -136,41 +140,58 @@ public class MetricDataImporter extends DefaultHandler {
         }
         
         if (qname.equals(MetricsManager.PackageElem)) {
-            parent = projectMetrics;
+            parent = mproject;
             return;
         }
         
         if (qname.equals(MetricsManager.ClassElem)) {
-            parent = packageMetrics;
+            parent = mpackage;
             return;
         }
         
         if (qname.equals(MetricsManager.MethodElem)) {
-            parent = classMetrics;
+            parent = mclass;
             return;
         }
         
         if (qname.equals(MetricsManager.FieldElem)) {
-            parent = classMetrics;
+            parent = mclass;
             return;
+        }
+    }
+    
+    private void setJxmProjectAttributes(Attributes attrs) {
+        String name = null;
+        String target = null;
+        String time = null;
+        for (int i = 0; i < attrs.getLength(); i++) {
+            if (attrs.getQName(i).equals(MetricsManager.NameAttr)) {
+                name = attrs.getValue(i);
+            } else if (attrs.getQName(i).equals(MetricsManager.PathAttr)) {
+                target = attrs.getValue(i);
+            } else if (attrs.getQName(i).equals(MetricsManager.TimeAttr)) {
+                time = attrs.getValue(i);
+            }
+        }
+        
+        if (name != null && target != null && time != null) {
+            mstore = new MetricsStore(name, target, time);
         }
     }
     
     private void setProjectAttributes(Attributes attrs) {
         String name = null;
         String path = null;
-        ZonedDateTime time = null;
         for (int i = 0; i < attrs.getLength(); i++) {
             if (attrs.getQName(i).equals(MetricsManager.NameAttr)) {
                 name = attrs.getValue(i);
             } else if (attrs.getQName(i).equals(MetricsManager.PathAttr)) {
                 path = attrs.getValue(i);
-            } else if (attrs.getQName(i).equals(MetricsManager.TimeAttr)) {
-                time = TimeInfo.getTime(attrs.getValue(i));
             }
         }
-        if (name != null && path != null && time != null) {
-            projectMetrics = new ProjectMetrics(name, path, time);
+        if (name != null && path != null) {
+            mproject = new ProjectMetrics(name, path);
+            mstore.add(mproject);
         }
     }
     
@@ -182,8 +203,8 @@ public class MetricDataImporter extends DefaultHandler {
             }
         }
         if (name != null) {
-            packageMetrics = new PackageMetrics(name, projectMetrics);
-            projectMetrics.addPackage(packageMetrics);
+            mpackage = new PackageMetrics(name, mproject);
+            mproject.addPackage(mpackage);
         }
     }
     
@@ -208,8 +229,8 @@ public class MetricDataImporter extends DefaultHandler {
         }
         
         if (fqn != null) {
-            classMetrics = new ClassMetrics(fqn, name, modifiers, kindStr, path, packageMetrics);
-            packageMetrics.addClass(classMetrics);
+            mclass = new ClassMetrics(fqn, name, modifiers, kindStr, path, mpackage);
+            mpackage.addClass(mclass);
         }
     }
     
@@ -235,8 +256,8 @@ public class MetricDataImporter extends DefaultHandler {
         }
         
         if (fqn != null) {
-            methodMetrics = new MethodMetrics(fqn, name, type, modifiers, kindStr, classMetrics);
-            classMetrics.addMethod(methodMetrics);
+            mmethod = new MethodMetrics(fqn, name, type, modifiers, kindStr, mclass);
+            mclass.addMethod(mmethod);
         }
     }
     
@@ -262,8 +283,8 @@ public class MetricDataImporter extends DefaultHandler {
         }
         
         if (fqn != null) {
-            fieldMetrics = new FieldMetrics(fqn, name, type, modifiers, kindStr, classMetrics);
-            classMetrics.addField(fieldMetrics);
+            mfield = new FieldMetrics(fqn, name, type, modifiers, kindStr, mclass);
+            mclass.addField(mfield);
         }
     }
     

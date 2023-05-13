@@ -96,7 +96,7 @@ public class Metrics {
         if (value != null) {
             return value.doubleValue();
         }
-        return -1.0;
+        return 0.0;
     }
     
     public void putMetricValue(String sort, double value) {
@@ -108,7 +108,7 @@ public class Metrics {
     }
     
     public void sortNames(List<String> names) {
-        Collections.sort(names, new Comparator<String>() {
+        Collections.sort(names, new Comparator<>() {
             public int compare(String name1, String name2) {
                 return name1.compareTo(name2);
             }

@@ -5,14 +5,12 @@
 
 package org.jtool.jxmetrics;
 
+import org.jtool.jxmetrics.core.MetricsStore;
 import org.jtool.jxmetrics.core.MetricsManager;
-import org.jtool.jxmetrics.core.ProjectMetrics;
-import org.jtool.jxplatform.builder.ModelBuilderBatch;
 import org.jtool.jxplatform.builder.CommandLineOptions;
-import org.jtool.srcmodel.JavaProject;
 import java.io.File;
-import java.util.List;
-import java.util.ArrayList;
+import java.nio.file.Paths;
+import java.nio.file.Files;
 
 /**
  * Calculates metric values.
@@ -21,46 +19,52 @@ import java.util.ArrayList;
  */
 public class MetricsCalculator {
     
-    private MetricsManager manager;
-    
     public static void main(String[] args) {
         MetricsCalculator calculator  = new MetricsCalculator();
         calculator.run(args);
     }
     
-    public MetricsCalculator() {
-    }
-    
     private void run(String[] args) {
-        CommandLineOptions options = new CommandLineOptions(args);
-        String target = options.get("-target", ".");
-        String name = options.get("-name", target);
-        if (!target.startsWith(File.separator)) {
-            String cdir = new File(".").getAbsoluteFile().getParent();
-            target = cdir + File.separatorChar + target;
-        }
-        String output = options.get("-output", null);
-        boolean logging = options.get("-logging", "on").equals("on") ? true : false;
+        String cdir = new File(".").getAbsolutePath();
+        int index = cdir.lastIndexOf(File.separatorChar);
+        cdir = cdir.substring(0, index);
         
-        List<ProjectMetrics> mprojects = getProjectMetrics(target, output, name, logging);
-        if (output != null) {
-            for (ProjectMetrics mproject : mprojects) {
-                manager.exportXML(mproject, output);
+        CommandLineOptions options = new CommandLineOptions(args);
+        
+        String target = options.get("-target", ".");
+        if (!target.startsWith(File.separator)) {
+            if (target.startsWith(".")) {
+                target = cdir;
+            } else {
+                target = cdir + File.separatorChar + target;
             }
         }
-    }
-    
-    public List<ProjectMetrics> getProjectMetrics(String target, String output, String name, boolean logging) {
-        ModelBuilderBatch builder = new ModelBuilderBatch(false, false);
-        List<JavaProject> jprojects = builder.build(name, target);
-        manager = new MetricsManager();
         
-        List<ProjectMetrics> mprojects = new ArrayList<>();
-        for (JavaProject jproject : jprojects) {
-            ProjectMetrics mproject = manager.calculate(jproject);
-            mprojects.add(mproject);
+        if (!Files.exists(Paths.get(target))) {
+            System.err.println("No such target folder");
+            return;
         }
-        builder.unbuild();
-        return mprojects;
+        
+        String name = options.get("-name", null);
+        if (name == null) {
+            index = target.lastIndexOf(File.separatorChar);
+            name = target.substring(index + 1);
+        }
+        
+        String output = options.get("-output", null);
+        if (output == null) {
+            output = MetricsManager.JXMETRICS_PREFIX + "-" + name + 
+                    "-" + MetricsManager.TIME_BOILERPLATE + MetricsManager.XML_FILENAME_EXT;
+        }
+        if (!output.startsWith(File.separator)) {
+            output = target + File.separatorChar + output;
+        }
+        
+        boolean logging = options.get("-logging", "on").equals("on") ? true : false;
+        
+        MetricsManager manager = new MetricsManager();
+        MetricsStore mstore = manager.calculate(name, target, logging);
+        manager.exportXML(mstore, output);
+        manager.unbuild();
     }
 }

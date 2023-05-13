@@ -1,10 +1,11 @@
 # JxMetrics3 (JxMetrics v3)
 
-JxMetrics is a module that calculates metrics values for elements within Java source code. 
+JxMetrics3 is a module that calculates metrics values for elements within Java source code, 
+internally using [JxPlatform3](https://github.com/katsuhisamaruyama/jxplatform3).
 
 ### Source Code Model 
 
-JxMetrics calculates several metric values for a project, package, class, method, and field and stores such information into the following classes: 
+JxMetrics3 calculates several metric values for a project, package, class, method, and field and stores such information into the following classes: 
 
 * ProjectMetrics - Stores metric information on a project 
 * PackageMetrics - Stores metric information on a package 
@@ -12,9 +13,7 @@ JxMetrics calculates several metric values for a project, package, class, method
 * MethodMetrics - Stores metrics information on a method 
 * FieldMetrics - Stores metrics information on a field 
 
-The measurement metrics are shown [here](<https://github.com/katsuhisamaruyama/jxmetrics/tree/master/org.jtool.jxmetrics/src/main/java/org/jtool/jxmetrics/measurement>).
-
-MetricsManager class provides APIs for calculating metric values. It also exports metric values into an XML file and imports ones from an XML file.
+The measurement metrics for each program element are shown [here](<https://github.com/katsuhisamaruyama/jxmetrics/tree/master/org.jtool.jxmetrics/src/main/java/org/jtool/jxmetrics/measurement>).
 
 ## Requirement
 
@@ -27,14 +26,14 @@ MetricsManager class provides APIs for calculating metric values. It also export
 
 ## Installation
 
-You can download the latest jar file (`jxplatform-3.x.x.jar`) 
-from the [Releases](https://github.com/katsuhisamaruyama/jxplatform3/releases/latest) page.
+You can download the latest jar file (`jxmetrics-3.jar`) 
+from the [Releases](https://github.com/katsuhisamaruyama/jxmetrics3/releases/latest) page.
 
 Alternatively, you can build a jar file with the Gradle on your own environment. 
 
 ```
 git clone https://github.com/katsuhisamaruyama/jxmetrics3/
-cd jxmetrics3/org.jtool.jxmetrics
+cd jxmetrics3
 ./gradlew jar shadowJar
 ```
 The jar file (`jxmetrics-3.jar`) exists in the 'build/libs' directory. 
@@ -47,42 +46,60 @@ When using the Eclipse, see the "Build Path" settings of a project.
 ### As a batch-process application
 
 `jxmetrics-3.jar` is an executable jar file.
-When you put Java source code (usually expanded Java source files) under the `xxx` folder,
-the following command calculates several metric values for the source code and writes the values into an XML file (`xxx-<time>.xml`).
+The following command calculates several metric values for the source code.
 
 ```
-java -jar jxmetrics-3.jar [-target target_path] -output output_file [-name name] [-logging on/off]
+java -jar jxmetrics-3.jar -target target_path -name name -output output_file -logging on/off
 ```
 * `-target` - (optional) specifies the path of a target project (default: the current directory) 
-* `-output`- (mandatory) specifies the name of a file in which the result of analysis is written 
-* `-name` - (optional) specifies the name of a target project 
+* `-name` - (optional) specifies the name of a target project (default: the last folder as the target path)
+* `-output`- (optional) specifies the name of the output file (deault: JX-<project_name>-<time_as_long>.xml)
 * `-logging` - (optional) displays log messages (default: on)
 
+### Building an application leveraging JxMetrics
 
-### Building an applicatio/plug-in embedding JxMetrics
-
-`MetricsManager` class provides APIs for calculating metric values. It also exports metric values into an XML file and imports ones from an XML file. The following API calls write the measured values into an XML file. 
+JxMetrics3 provides APIs for calculating metric values and exporting the calculated metric values into an XML file. 
 
 ```java
-String target;   // the path of a target project (default: the current directory) 
-String output;   // the name of a file in which the result of analysis is written 
 String name;     // the name of a target project 
-boolean logging; // whether log messages are displayed
-
-MetricsCalculator calculator  = new MetricsCalculator();
-List<ProjectMetrics> calculator = getProjectMetrics(target, output, name, logging);
-for (ProjectMetrics mproject : mprojects) {
-    manager.exportXML(mproject, output);
-}
-```
-
-The following code imports metrics values from an XML file with a path name.
-
-```
-String path;  // The path of an XNL file that contains metrics data
+String target;   // the path of a target project 
+boolean logging; // whether log messages are displayed 
 
 MetricsManager manager = new MetricsManager();
-ProjectMetrics mproject = manager.importXML(path);
+MetricsStore mstore = manager.calculate(name, target, logging);
+
+String path;     // the name of a file in which the result of analysis is written 
+exportXML(mstore, path);
+
+manager.unbuild();
+```
+
+It also imports metric values from an XML file.
+
+```java
+String path;   // the path of a file output by JxMetrics3. 
+MetricsManager manager = new MetricsManager();
+MetricsStore mstore = manager.importXML(path);
+```
+
+The following code shows all metric values. 
+
+```java
+MetricsManager manager = new MetricsManager();
+MetricsStore mstore = manager.calculate(project, target, true);
+
+for (ProjectMetrics mproject: mstore.getProjectMetrics()) {
+    for (ClassMetrics mclass : mproject.getClasses()) {
+        Map<String, Double> metrics = mclass.getMetricValues()
+        for (String sort : metrics.keySet()) {
+            double value = metrics.get(sort).doubleValue();
+            System.out.print("{" + sort + ":" + value + "}");
+        }
+    }
+}
+
+manager.unbuild();
+```
 
 ## Author
 

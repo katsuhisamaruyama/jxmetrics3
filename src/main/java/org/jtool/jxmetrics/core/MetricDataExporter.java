@@ -22,20 +22,28 @@ public class MetricDataExporter {
     public MetricDataExporter() {
     }
     
-    public Document getDocument(ProjectMetrics mproject) {
+    public Document getDocument(MetricsStore mstore) throws ParserConfigurationException {
         try {
             DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
             Document doc = builder.newDocument();
-            Element projectElem = doc.createElement(MetricsManager.ProjectElem);
-            projectElem.setAttribute(MetricsManager.NameAttr, mproject.getName());
-            projectElem.setAttribute(MetricsManager.PathAttr, mproject.getPath());
-            projectElem.setAttribute(MetricsManager.TimeAttr, mproject.getTimeAsString());
-            doc.appendChild(projectElem);
+            Element projectsElem = doc.createElement(MetricsManager.ProjectsElem);
+            projectsElem.setAttribute(MetricsManager.NameAttr, mstore.getName());
+            projectsElem.setAttribute(MetricsManager.PathAttr, mstore.getTarget());
+            projectsElem.setAttribute(MetricsManager.TimeAttr, mstore.getTimeAsString());
+            doc.appendChild(projectsElem);
             
-            exportMetricAttributes(doc, projectElem, mproject.getMetricValues());
-            
-            for (PackageMetrics mpackage : mproject.getPackages()) {
-                export(doc, projectElem, mpackage);
+            for (ProjectMetrics mproject : mstore.getProjectMetrics()) {
+                Element projectElem = doc.createElement(MetricsManager.ProjectElem);
+                projectElem.setAttribute(MetricsManager.NameAttr, mproject.getName());
+                projectElem.setAttribute(MetricsManager.PathAttr, mproject.getPath());
+                
+                projectsElem.appendChild(projectElem);
+                
+                exportMetricAttributes(doc, projectElem, mproject.getMetricValues());
+                
+                for (PackageMetrics mpackage : mproject.getPackages()) {
+                    export(doc, projectElem, mpackage);
+                }
             }
             return doc;
             

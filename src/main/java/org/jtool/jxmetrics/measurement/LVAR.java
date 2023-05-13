@@ -25,7 +25,7 @@ public class LVAR extends Metric {
     }
     
     public double calculate(JavaMethod jmethod) {
-        return (double)jmethod.getLocalVariables().size();
+        return (double)(jmethod.getLocalVariables().size() + jmethod.getParameterSize());
     }
     
     @Override

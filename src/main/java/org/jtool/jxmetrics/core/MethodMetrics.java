@@ -51,7 +51,8 @@ public class MethodMetrics extends CommonMetrics {
     }
     
     public MethodMetrics(JavaProject jproject, JavaMethod jmethod, ClassMetrics mclass) {
-        this(jmethod.getQualifiedName().fqn(), jmethod.getSignature(), jmethod.getReturnType(), jmethod.getModifiers());
+        this(jmethod.getQualifiedName().fqn(), jmethod.getSignature(),
+                jmethod.getReturnType(), jmethod.getModifiers());
         
         kind = getKind(jmethod);
         classMetrics = mclass;
@@ -74,7 +75,8 @@ public class MethodMetrics extends CommonMetrics {
         }
     }
     
-    public MethodMetrics(String fqn, String name, String type, int modifiers, String kindStr, ClassMetrics mclass) {
+    public MethodMetrics(String fqn, String name, String type,
+            int modifiers, String kindStr, ClassMetrics mclass) {
         super(fqn, name, type, modifiers);
         kind = MethodMetrics.Kind.valueOf(kindStr);
         classMetrics = mclass;
@@ -238,7 +240,7 @@ public class MethodMetrics extends CommonMetrics {
     }
     
     public static void sort(List<MethodMetrics> methods) {
-        Collections.sort(methods, new Comparator<MethodMetrics>() {
+        Collections.sort(methods, new Comparator<>() {
             
             @Override
             public int compare(MethodMetrics method1, MethodMetrics method2) {
@@ -248,20 +250,28 @@ public class MethodMetrics extends CommonMetrics {
     }
     
     public static int getNumberOfStatements(JavaMethod jmethod) {
-        StatementCollector statementCollector = new StatementCollector();
-        jmethod.getASTNode().accept(statementCollector);
-        return statementCollector.getNumberOfStatements();
+        if (jmethod.getASTNode() != null) {
+            StatementCollector statementCollector = new StatementCollector();
+            jmethod.getASTNode().accept(statementCollector);
+            return statementCollector.getNumberOfStatements();
+        }
+        return 0;
     }
     
     public static int getMaximumNumberOfNesting(JavaMethod jmethod) {
-        StatementCollector statementCollector = new StatementCollector();
-        jmethod.getASTNode().accept(statementCollector);
-        return statementCollector.getMaximumNuberOfNesting();
+        if (jmethod.getASTNode() != null) {
+            StatementCollector statementCollector = new StatementCollector();
+            jmethod.getASTNode().accept(statementCollector);
+            return statementCollector.getMaximumNuberOfNesting();}
+        return 0;
     }
     
     public static int getCyclomaticNumber(JavaMethod jmethod) {
-        StatementCollector statementCollector = new StatementCollector();
-        jmethod.getASTNode().accept(statementCollector);
-        return statementCollector.getCyclomaticNumber();
+        if (jmethod.getASTNode() != null) {
+            StatementCollector statementCollector = new StatementCollector();
+            jmethod.getASTNode().accept(statementCollector);
+            return statementCollector.getCyclomaticNumber();
+        }
+        return 0;
     }
 }

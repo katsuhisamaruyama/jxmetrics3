@@ -21,7 +21,7 @@ public class SourceCodeStore {
     
     private static SourceCodeStore instance = new SourceCodeStore();
     
-    protected Map<String, SourceCodeInfo> sourceCodeStore = new HashMap<String, SourceCodeInfo>();
+    protected Map<String, SourceCodeInfo> sourceCodeStore = new HashMap<>();
     
     private SourceCodeStore() {
     }

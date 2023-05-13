@@ -27,14 +27,10 @@ import org.jtool.jxmetrics.measurement.NOFILE;
 import org.jtool.jxmetrics.measurement.NOPG;
 import org.jtool.jxmetrics.measurement.Metric;
 import org.jtool.srcmodel.JavaProject;
-import org.jtool.jxplatform.builder.TimeInfo;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.ZonedDateTime;
 
 /**
  * Stores metric information on a project.
@@ -45,28 +41,26 @@ public class ProjectMetrics extends Metrics {
     
     public static final String Id = "ProjectMetrics";
     
+    private JavaProject jproject = null;
+    
     protected String path;
-    protected ZonedDateTime time;
     
-    protected List<PackageMetrics> packages = new ArrayList<PackageMetrics>();
+    protected List<PackageMetrics> packages = new ArrayList<>();
     
-    public ProjectMetrics(JavaProject jproject, ZonedDateTime time) {
-        super(jproject.getName());
-        
-        path = jproject.getTopPath();
-        this.time = time;
+    public ProjectMetrics(String name, String path) {
+        super(name);
+        this.path = path;
+    }
+    
+    public ProjectMetrics(JavaProject jproject) {
+        this(jproject.getName(), jproject.getTopPath());
+        this.jproject = jproject;
     }
     
     public void collect(JavaProject jproject) {
         PackageMetrics.sort(packages);
         collectMetrics(jproject);
         collectMetricsMax();
-    }
-    
-    public ProjectMetrics(String name, String path, ZonedDateTime time) {
-        super(name);
-        this.path = path;
-        this.time = time;
     }
     
     public String getName() {
@@ -77,20 +71,8 @@ public class ProjectMetrics extends Metrics {
         return path;
     }
     
-    public ZonedDateTime getTime() {
-        return time;
-    }
-    
-    public long getTimeAsLong() {
-        return TimeInfo.getTimeAsLong(time);
-    }
-    
-    public String getTimeAsString() {
-        return TimeInfo.getTimeAsISOString(time);
-    }
-    
-    public String getFormatedDate() {
-        return TimeInfo.getFormatedDate(time);
+    public JavaProject getJavaProject() {
+        return jproject;
     }
     
     public void addPackage(PackageMetrics mpackage) {
@@ -197,23 +179,5 @@ public class ProjectMetrics extends Metrics {
         for (PackageMetrics mpackage : packages) {
             mpackage.collectMetricsAfterXMLImport();
         }
-    }
-    
-    public static void sort(List<ProjectMetrics> projects) {
-        Collections.sort(projects, new Comparator<ProjectMetrics>() {
-            
-            @Override
-            public int compare(ProjectMetrics project1, ProjectMetrics project2) {
-                long time1 = project1.getTimeAsLong();
-                long time2 = project2.getTimeAsLong();
-                if (time1 > time2) {
-                    return 1;
-                } else if (time1 < time2) {
-                    return -1;
-                } else {
-                    return 0;
-                }
-            }
-        });
     }
 }

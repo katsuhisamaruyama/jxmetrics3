@@ -95,7 +95,7 @@ public class FieldMetrics extends CommonMetrics {
     }
     
     public static void sort(List<FieldMetrics> mfields) {
-        Collections.sort(mfields, new Comparator<FieldMetrics>() {
+        Collections.sort(mfields, new Comparator<>() {
             
             @Override
             public int compare(FieldMetrics mfield1, FieldMetrics mfield2) {

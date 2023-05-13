@@ -47,24 +47,15 @@ public class PackageMetrics extends Metrics {
     
     private ProjectMetrics projectMetrics;
     
-    protected List<ClassMetrics> classes = new ArrayList<ClassMetrics>();
-    protected List<String> afferentPackageNames = new ArrayList<String>();
-    protected List<String> efferentPackageNames = new ArrayList<String>();
+    protected List<ClassMetrics> classes = new ArrayList<>();
+    protected List<String> afferentPackageNames = new ArrayList<>();
+    protected List<String> efferentPackageNames = new ArrayList<>();
     
     public PackageMetrics(JavaProject jproject, JavaPackage jpackage, ProjectMetrics mproject) {
         super(jpackage.getName());
         
         projectMetrics = mproject;
-        for (JavaClass jclass : jpackage.getClasses()) {
-            
-            if (jclass.isInProject());
-            
-            
-            
-            
-            
-            
-            
+        for (JavaClass jclass : new ArrayList<>(jpackage.getClasses())) {
             ClassMetrics mclass = new ClassMetrics(jproject, jclass, this);
             classes.add(mclass);
         }
@@ -204,7 +195,7 @@ public class PackageMetrics extends Metrics {
     }
     
     public static void sort(List<PackageMetrics> packages) {
-        Collections.sort(packages, new Comparator<PackageMetrics>() {
+        Collections.sort(packages, new Comparator<>() {
             
             @Override
             public int compare(PackageMetrics mpackage1, PackageMetrics mpackage2) {

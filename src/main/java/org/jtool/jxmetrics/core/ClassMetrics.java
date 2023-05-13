@@ -54,13 +54,13 @@ public class ClassMetrics extends CommonMetrics {
     protected ClassMetrics.Kind kind;
     protected PackageMetrics packageMetrics;
     protected String superClassName;
-    protected List<String> superInterfaceNames = new ArrayList<String>();
+    protected List<String> superInterfaceNames = new ArrayList<>();
     protected String path;
     
-    protected List<MethodMetrics> methods = new ArrayList<MethodMetrics>();
-    protected List<FieldMetrics> fields = new ArrayList<FieldMetrics>();
-    protected List<String> afferentClassNames = new ArrayList<String>();
-    protected List<String> efferentClassNames = new ArrayList<String>();
+    protected List<MethodMetrics> methods = new ArrayList<>();
+    protected List<FieldMetrics> fields = new ArrayList<>();
+    protected List<String> afferentClassNames = new ArrayList<>();
+    protected List<String> efferentClassNames = new ArrayList<>();
     
     public enum Kind {
         J_CLASS, J_INTERFACE, J_ENUM, J_LAMBDA, UNKNOWN;
@@ -77,14 +77,13 @@ public class ClassMetrics extends CommonMetrics {
         packageMetrics = mpackage;
         superClassName = jclass.getSuperClassName();
         superInterfaceNames.addAll(jclass.getSuperInterfaceNames());
-        
-        System.err.print(jclass);
-        
         path = jclass.getFile().getRelativePath();
         setCodeProperties(jclass);
         
         for (JavaMethod jmethod : jclass.getMethods()) {
-            methods.add(new MethodMetrics(jproject, jmethod, this));
+            if (!jmethod.isSynthetic()) {
+                methods.add(new MethodMetrics(jproject, jmethod, this));
+            }
         }
         for (JavaField jfield: jclass.getFields()) {
             fields.add(new FieldMetrics(jproject, jfield, this));
@@ -338,7 +337,7 @@ public class ClassMetrics extends CommonMetrics {
     }
     
     public static void sort(List<ClassMetrics> classes) {
-        Collections.sort(classes, new Comparator<ClassMetrics>() {
+        Collections.sort(classes, new Comparator<>() {
             
             @Override
             public int compare(ClassMetrics mclass1, ClassMetrics mclass2) {
