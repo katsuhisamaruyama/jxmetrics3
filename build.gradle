@@ -37,12 +37,11 @@ targetCompatibility = '1.11'
 
 repositories {
     mavenCentral()
-    maven { url 'https://repo.gradle.org/gradle/libs-releases' }
     maven { url 'https://jitpack.io' }
 }
 
 dependencies {
-    implementation 'com.github.katsuhisamaruyama:jxplatform3:3.0.15'
+    implementation 'com.github.katsuhisamaruyama:jxplatform3:3.0.25'
     implementation group: 'org.eclipse.jdt', name: 'org.eclipse.jdt.core', version: '3.32.0'
     
     testImplementation 'junit:junit:4.+'
