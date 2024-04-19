@@ -5,10 +5,7 @@
 
 buildscript {
     repositories {
-        maven {
-	    mavenCentral()
-            url "https://plugins.gradle.org/m2/"
-        }
+        gradlePluginPortal()
     }
     dependencies {
         classpath "gradle.plugin.com.github.johnrengelman:shadow:7.1.2"
@@ -38,6 +35,7 @@ targetCompatibility = '1.11'
 repositories {
     mavenCentral()
     maven { url 'https://jitpack.io' }
+    maven { url 'https://repo.gradle.org/gradle/libs-releases' }
 }
 
 dependencies {
